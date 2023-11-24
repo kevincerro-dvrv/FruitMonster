@@ -13,7 +13,9 @@ public class MonsterBody : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.Rotate(Vector3.back, Time.deltaTime * speed);
+        // Each 50 points we add 20 degrees/second to speed
+        int difficultySpeed = GameManager.instance.GetTotalScore() / 50 * 20;
+        transform.Rotate(Vector3.back, Time.deltaTime * (speed + difficultySpeed));
     }
 
     public float GetCurrentAngle()

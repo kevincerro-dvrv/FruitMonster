@@ -6,13 +6,23 @@ public class GameManager : MonoBehaviour
     public GameObject fruitCarousel;
     public GameObject spawnPoint;
     public GameObject[] fruitPrefabs;
+    public AudioClip winClip;
+    public AudioClip failClip;
 
     public static GameManager instance;
 
+    private AudioSource audioPlayer;
+
     private GameObject spawnedFruit;
+
+    private const float CAPTURE_PRECISION = 10f;
+
+    private int hp = 3;
+    public int totalScore = 0;
 
     void Awake()
     {
+        audioPlayer = GetComponent<AudioSource>();
         instance = this;
     }
 
@@ -32,21 +42,24 @@ public class GameManager : MonoBehaviour
 
     private void EatFruit()
     {
-        if (Mathf.Abs(fruitCarousel.transform.eulerAngles.z - monsterBody.GetCurrentAngle()) < 4) {
-            // Destroy fruit
-            Destroy(spawnedFruit);
-
-            // @TODO Play ok sound
-            // @TODO Add points
-
-            // Spawn new fruit
-            SpawnFruit();
-
+        if (!IsFruitInMouth()) {
+            audioPlayer.PlayOneShot(failClip);
+            hp--;
             return;
         }
 
-        // @TODO Play ko sound
-        // @TODO Substract 1 point to player
+        Destroy(spawnedFruit);
+        audioPlayer.PlayOneShot(winClip);
+        totalScore += spawnedFruit.GetComponent<Fruit>().points;
+        SpawnFruit();
+    }
+
+    private bool IsFruitInMouth()
+    {
+        float fruitAngle = fruitCarousel.transform.eulerAngles.z;
+        float mouthAngle = monsterBody.GetCurrentAngle();
+
+        return Mathf.Abs(Mathf.DeltaAngle(fruitAngle, mouthAngle)) < CAPTURE_PRECISION;
     }
 
     private void SpawnFruit()
@@ -58,5 +71,10 @@ public class GameManager : MonoBehaviour
         // Spawn fruit in position
         int randomFruit = Random.Range(0, fruitPrefabs.Length);
         spawnedFruit = Instantiate(fruitPrefabs[randomFruit], spawnPoint.transform.position, Quaternion.identity);
+    }
+
+    public int GetTotalScore()
+    {
+        return totalScore;
     }
 }
